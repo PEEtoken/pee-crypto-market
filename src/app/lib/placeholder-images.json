@@ -1,0 +1,23 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-bg",
+      "description": "Futuristic digital supermarket with neon blue and purple data streams",
+      "imageUrl": "https://picsum.photos/seed/pee-hero-tech/1920/1080",
+      "imageHint": "cyberpunk supermarket"
+    },
+    {
+      "id": "tech-retail-integration",
+      "description": "PEE Shopping app on smartphone with delivery truck and crypto coins",
+      "imageUrl": "/propuesta-tecnologica.png",
+      "imageHint": "crypto smartphone app"
+    },
+    {
+      "id": "main-logo",
+      "description": "Official PEE Market Logo",
+      "imageUrl": "/logo-principal.jpg",
+      "imageHint": "brand logo"
+    }
+  ]
+}
