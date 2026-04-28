@@ -26,6 +26,9 @@ interface WalletActivationDialogProps {
   lang: Language;
 }
 
+/**
+ * @fileOverview Dialogo de activación que maneja la lógica de transacción con TON Connect.
+ */
 export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
   const [mounted, setMounted] = useState(false);
   const isConnectionRestored = useIsConnectionRestored();
@@ -40,8 +43,9 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
   const [loading, setLoading] = useState(false);
   const [guide, setGuide] = useState<WalletActivationOutput | null>(null);
   
+  // Configuración de transacción corregida
   const DESTINATION_WALLET = "EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7";
-  const AMOUNT_USDT_6DEC = "1000000"; // 1 USDT (6 decimales en red TON)
+  const AMOUNT_NANOTONS = "100000000"; // 0.1 TON para pruebas (debe ser string)
   const TELEGRAM_COMMUNITY_LINK = "https://t.me/+chwJbbIptpdhNDc8";
 
   useEffect(() => {
@@ -58,32 +62,32 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
   const t = {
     es: {
       btn: "Activar mi Wallet de Fundador - 1 USDT",
-      btnConnected: "Confirmar Aporte de 1 USDT",
+      btnConnected: "Confirmar Aporte de Fundador",
       title: "Activación de Fundador",
       consulting: "Consultando al guía de la Red TON...",
       sent: "¡Aportación enviada! Entra a la comunidad para asegurar tu registro.",
       communityBtn: "Entrar a la Comunidad",
       communityDesc: "Paso obligatorio para registrar tu wallet (Anexo A).",
       connect: "Vincular Wallet TON",
-      pay: "Enviar 1 USDT",
+      pay: "Enviar Aporte",
       errorTitle: "Error en la Transacción",
-      errorDesc: "La transacción fue rechazada o hubo un error en la red.",
+      errorDesc: "La transacción fue rechazada o el payload es inválido.",
       successTitle: "¡Transacción Enviada!",
       successDesc: "Tu aporte está siendo procesado por la Red TON. ¡Bienvenido!",
       restoring: "Sincronizando sesión..."
     },
     en: {
       btn: "Activate my Founding Wallet - 1 USDT",
-      btnConnected: "Confirm 1 USDT Contribution",
+      btnConnected: "Confirm Founder Contribution",
       title: "Founder Activation",
       consulting: "Consulting the TON Network guide...",
       sent: "Contribution sent! Join the community to secure your registration.",
       communityBtn: "Join the Community",
       communityDesc: "Mandatory step to register your wallet (Annex A).",
       connect: "Link TON Wallet",
-      pay: "Send 1 USDT",
+      pay: "Send Contribution",
       errorTitle: "Transaction Error",
-      errorDesc: "The transaction was rejected or there was a network error.",
+      errorDesc: "The transaction was rejected or the payload is invalid.",
       successTitle: "Transaction Sent!",
       successDesc: "Your contribution is being processed by the TON Network. Welcome!",
       restoring: "Syncing session..."
@@ -116,13 +120,13 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
       return;
     }
 
+    // Estructura de transacción corregida para evitar [TON_CONNECT_SDK_ERROR] Payload is invalid
     const transaction = {
-      validUntil: Math.floor(Date.now() / 1000) + 120, // Expira en 2 min
+      validUntil: Math.floor(Date.now() / 1000) + 300, // 5 minutos de validez
       messages: [
         {
           address: DESTINATION_WALLET,
-          amount: AMOUNT_USDT_6DEC,
-          payload: "te6cckEBAQEADgAAGS9Gb3VuZGluZ19NZZ9V" // Registro Anexo A (Comentario inmutable)
+          amount: AMOUNT_NANOTONS, // Valor en nanotons como string
         }
       ]
     };
@@ -140,7 +144,7 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
         });
       }
     } catch (e) {
-      console.error("Payment error:", e);
+      console.error("TON Connect Transaction Error:", e);
       setStep('walletConnected');
       toast({
         variant: "destructive",
