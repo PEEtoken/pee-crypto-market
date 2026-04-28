@@ -5,26 +5,48 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Languages, Loader2 } from 'lucide-react';
+import { Languages, Loader2, Wallet } from 'lucide-react';
 import { Language } from '@/app/page';
-import { TonConnectButton, useIsConnectionRestored } from '@tonconnect/ui-react';
+import { 
+  useTonConnectModal, 
+  useTonAddress, 
+  useIsConnectionRestored,
+  TonConnectButton
+} from '@tonconnect/ui-react';
 
 interface NavigationProps {
   lang: Language;
   toggleLang: () => void;
 }
 
+/**
+ * @fileOverview Navegación con integración de hook useTonConnectModal para conexión personalizada.
+ */
 export function Navigation({ lang, toggleLang }: NavigationProps) {
   const [mounted, setMounted] = useState(false);
   const isConnectionRestored = useIsConnectionRestored();
+  const { open } = useTonConnectModal();
+  const userAddress = useTonAddress();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const t = {
-    es: { proposal: "Propuesta", security: "Seguridad", roadmap: "Roadmap", faq: "FAQ" },
-    en: { proposal: "Proposal", security: "Security", roadmap: "Roadmap", faq: "FAQ" }
+    es: { 
+      proposal: "Propuesta", 
+      security: "Seguridad", 
+      roadmap: "Roadmap", 
+      faq: "FAQ",
+      connect: "Conectar Wallet"
+    },
+    en: { 
+      proposal: "Proposal", 
+      security: "Security", 
+      roadmap: "Roadmap", 
+      faq: "FAQ",
+      connect: "Connect Wallet"
+    }
   }[lang];
 
   return (
@@ -57,11 +79,20 @@ export function Navigation({ lang, toggleLang }: NavigationProps) {
             <Languages className="h-4 w-4" />
             <span className="uppercase">{lang}</span>
           </Button>
-          <div className="ton-button-wrapper min-w-[140px] flex justify-end">
+          
+          <div className="flex items-center">
             {!mounted || !isConnectionRestored ? (
-              <div className="h-10 w-[140px] bg-muted rounded-xl flex items-center justify-center">
-                <Loader2 className="h-4 w-4 animate-spin text-primary/30" />
-              </div>
+              <Button disabled variant="outline" size="sm" className="rounded-xl">
+                <Loader2 className="h-4 w-4 animate-spin" />
+              </Button>
+            ) : !userAddress ? (
+              <Button 
+                onClick={open} 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl h-10 px-4"
+              >
+                <Wallet className="mr-2 h-4 w-4" />
+                {t.connect}
+              </Button>
             ) : (
               <TonConnectButton />
             )}
