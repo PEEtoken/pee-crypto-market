@@ -43,22 +43,35 @@ export function Counter({ lang }: CounterProps) {
   }[lang];
 
   useEffect(() => {
-    // Implementamos un contador resiliente que evita errores de fetch
     const fetchCount = async () => {
       try {
-        // En producción aquí iría el fetch a la API de TON
-        // Por ahora usamos un valor base seguro para evitar "Failed to fetch"
-        setCount(19);
+        const res = await fetch(
+          "https://tonapi.io/v2/blockchain/accounts/EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7/transactions"
+        );
+
+        const data = await res.json();
+
+        const txs = data.transactions || [];
+
+        const incoming = txs.filter(
+          (tx: any) => tx.in_msg && tx.in_msg.destination?.address
+        );
+
+        setCount(incoming.length);
+
       } catch (error) {
-        console.warn("Error fetching blockchain data, using fallback value");
-        setCount(19);
+        console.error("Error fetching TON data:", error);
+        setCount(0);
       } finally {
         setLoading(false);
       }
     };
 
-    const timer = setTimeout(fetchCount, 1000);
-    return () => clearTimeout(timer);
+    fetchCount();
+
+    const interval = setInterval(fetchCount, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
