@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -154,6 +153,13 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
     }
   };
 
+  const handleDirectPay = () => {
+    window.open(
+      "https://app.tonkeeper.com/transfer/EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7?amount=100000000",
+      "_blank"
+    );
+  };
+
   const getStepIcon = () => {
     if (!mounted || !isConnectionRestored) return <Loader2 className="h-10 w-10 animate-spin text-primary/30" />;
     switch (step) {
@@ -226,6 +232,13 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
                         <ExternalLink className="h-5 w-5" />
                       )}
                       {!wallet ? t.connect : t.pay}
+                    </Button>
+                    <Button
+                      onClick={handleDirectPay}
+                      variant="outline"
+                      className="w-full mt-3 border-primary text-primary"
+                    >
+                      Pagar directo (Multisig)
                     </Button>
                   </div>
                 )}
