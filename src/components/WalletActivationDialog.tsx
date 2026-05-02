@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -126,6 +127,7 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
         {
           address: DESTINATION_WALLET,
           amount: AMOUNT_NANOTONS, // Valor en nanotons como string
+          bounce: false,
         }
       ]
     };
