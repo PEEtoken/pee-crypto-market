@@ -43,7 +43,7 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
   const [guide, setGuide] = useState<WalletActivationOutput | null>(null);
   
   // Configuración de transacción corregida
-  const DESTINATION_WALLET = "EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7";
+  const DESTINATION_WALLET = "UQCx6O7-7_Cdp6tgZI21h3EBbOAU0lOFQS4z_CHRyy-oOn0i";
   const AMOUNT_NANOTONS = "100000000"; // 0.1 TON para pruebas (debe ser string)
   const TELEGRAM_COMMUNITY_LINK = "https://t.me/+chwJbbIptpdhNDc8";
 
@@ -225,6 +225,9 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
                   </div>
                 ) : (
                   <div className="pt-4">
+                    <p className="text-xs text-muted-foreground text-center mb-2">
+                      Tu aporte se procesa de forma segura y posteriormente se transfiere a la wallet multifirma del proyecto para garantizar transparencia.
+                    </p>
                     <Button 
                       disabled={step === 'usdtSent'}
                       onClick={handleAction} 
