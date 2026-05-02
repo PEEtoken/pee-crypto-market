@@ -154,10 +154,16 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
   };
 
   const handleDirectPay = () => {
-    window.open(
-      "https://app.tonkeeper.com/transfer/EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7?amount=100000000",
-      "_blank"
-    );
+    const url = "ton://transfer/EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7?amount=100000000";
+
+    window.location.href = url;
+
+    setTimeout(() => {
+      window.open(
+        "https://app.tonkeeper.com/transfer/EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7?amount=100000000",
+        "_blank"
+      );
+    }, 1500);
   };
 
   const getStepIcon = () => {
