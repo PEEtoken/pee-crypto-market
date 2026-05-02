@@ -28,6 +28,7 @@ interface WalletActivationDialogProps {
 
 /**
  * @fileOverview Dialogo de activación que maneja la lógica de transacción con TON Connect.
+ * Ahora incluye cálculo dinámico de precio basado en el mercado.
  */
 export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
   const [mounted, setMounted] = useState(false);
@@ -69,7 +70,7 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
       connect: "Vincular Wallet TON",
       pay: "Enviar Aporte",
       errorTitle: "Error en la Transacción",
-      errorDesc: "La transacción fue rechazada o el payload es inválido.",
+      errorDesc: "La transacción fue rechazada o el precio no pudo ser calculado.",
       successTitle: "¡Transacción Enviada!",
       successDesc: "Tu aporte está siendo procesado por la Red TON. ¡Bienvenido!",
       restoring: "Sincronizando sesión..."
@@ -85,12 +86,36 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
       connect: "Link TON Wallet",
       pay: "Send Contribution",
       errorTitle: "Transaction Error",
-      errorDesc: "The transaction was rejected or the payload is invalid.",
+      errorDesc: "The transaction was rejected or price could not be calculated.",
       successTitle: "Transaction Sent!",
       successDesc: "Your contribution is being processed by the TON Network. Welcome!",
       restoring: "Syncing session..."
     }
   }[lang];
+
+  /**
+   * Obtiene el precio actual de TON en USD desde CoinGecko.
+   */
+  const getTonPrice = async (): Promise<number> => {
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd');
+      const data = await response.json();
+      return data['the-open-network'].usd;
+    } catch (error) {
+      console.error('Error fetching TON price:', error);
+      // Fallback razonable si falla la API
+      return 5.5; 
+    }
+  };
+
+  /**
+   * Calcula la cantidad de NanoTONs equivalente a 1 USD.
+   */
+  const calculateAmount = (usdAmount: number, tonPrice: number): string => {
+    const tonAmount = usdAmount / tonPrice;
+    const nanoTons = Math.floor(tonAmount * 1e9);
+    return nanoTons.toString();
+  };
 
   const fetchGuidance = async (currentStep: WalletActivationInput['currentStep'], walletAddr?: string) => {
     if (!mounted) return;
@@ -118,18 +143,23 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
       return;
     }
 
-    const transaction = {
-      validUntil: Math.floor(Date.now() / 1000) + 600,
-      messages: [
-        {
-          address: DESTINATION_WALLET,
-          amount: (0.1 * 1e9).toString(),
-        }
-      ]
-    };
-
     try {
       setStep('usdtSent');
+      
+      // Obtener monto dinámico basado en 1 USD
+      const tonPrice = await getTonPrice();
+      const dynamicAmount = calculateAmount(1, tonPrice);
+
+      const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 600,
+        messages: [
+          {
+            address: DESTINATION_WALLET,
+            amount: dynamicAmount,
+          }
+        ]
+      };
+
       const result = await tonConnectUI.sendTransaction(transaction);
       
       if (result) {
