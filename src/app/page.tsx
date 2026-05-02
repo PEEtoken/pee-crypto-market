@@ -12,6 +12,7 @@ import { SecuritySection } from '@/components/SecuritySection';
 import { FAQ } from '@/components/FAQ';
 import { Footer } from '@/components/Footer';
 import { Toaster } from "@/components/ui/toaster";
+import Image from 'next/image';
 
 export type Language = 'es' | 'en';
 
@@ -35,6 +36,18 @@ export default function Home() {
       <TokenUtility />
       <SecuritySection />
       <FAQ />
+      
+      <section className="w-full bg-gradient-to-b from-black to-primary py-16 flex justify-center px-4">
+        <Image 
+          src="/infografia.png" 
+          alt="Infografía PEE Crypto Market"
+          width={1200}
+          height={800}
+          className="max-w-5xl w-full h-auto rounded-2xl shadow-2xl"
+          unoptimized
+        />
+      </section>
+
       <Footer />
       <Toaster />
     </main>
