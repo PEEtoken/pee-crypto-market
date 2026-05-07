@@ -1,5 +1,4 @@
-
-import { ShoppingBasket, Send, MessageCircle } from 'lucide-react';
+import { ShoppingBasket, MessageCircle, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Footer() {
@@ -51,12 +50,36 @@ export function Footer() {
           </div>
         </div>
         
-        <div className="pt-10 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-sm text-primary-foreground/40">
-            © {new Date().getFullYear()} PEE Crypto Market. Todos los derechos reservados.
+        <div className="pt-10 border-t border-white/10">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
+            <div className="text-sm text-primary-foreground/40 font-medium">
+              © {new Date().getFullYear()} PEE Crypto Market. Todos los derechos reservados.
+            </div>
+            <div className="flex gap-6 text-[10px] text-primary-foreground/40 font-bold uppercase tracking-widest">
+              <a href="#" className="hover:text-secondary transition-colors">Términos</a>
+              <a href="#" className="hover:text-secondary transition-colors">Privacidad</a>
+              <a href="#" className="hover:text-secondary transition-colors">Disclaimer</a>
+            </div>
           </div>
-          <div className="text-xs text-primary-foreground/40 text-center md:text-right max-w-lg leading-tight">
-            Token PEE es un token de utilidad. No representa acciones legales. Invertir en criptoactivos conlleva riesgos.
+
+          <div className="max-w-4xl mx-auto text-center border-t border-white/5 pt-8">
+            <div className="flex justify-center mb-4 text-secondary/30">
+               <ShieldCheck className="h-6 w-6" />
+            </div>
+            <div className="text-[10px] md:text-xs text-primary-foreground/40 leading-relaxed space-y-4">
+              <p>
+                PEE Crypto Market es un ecosistema digital en fase inicial orientado al desarrollo de soluciones Web3, comunidad y tecnología blockchain. El Token PEE es un token de utilidad dentro del ecosistema y no representa acciones, valores financieros, participación societaria ni derechos legales sobre una entidad.
+              </p>
+              <p>
+                La participación dentro de la plataforma y los aportes realizados son voluntarios y no constituyen una inversión financiera ni garantizan rendimientos económicos futuros.
+              </p>
+              <p>
+                Los criptoactivos y tecnologías blockchain implican riesgos tecnológicos, regulatorios y de mercado. Cada usuario es responsable de realizar su propia evaluación antes de participar.
+              </p>
+              <p>
+                PEE Crypto Market no proporciona asesoría financiera, legal o de inversión.
+              </p>
+            </div>
           </div>
         </div>
       </div>
