@@ -10,7 +10,7 @@ import {
   DialogTrigger 
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wallet, Send, CheckCircle2, MessageCircle, ExternalLink, AlertCircle } from 'lucide-react';
+import { Loader2, Wallet, Send, CheckCircle2, MessageCircle, ExternalLink, AlertCircle, ShieldCheck, History } from 'lucide-react';
 import { aiWalletActivationGuide, WalletActivationOutput, WalletActivationInput } from '@/ai/flows/ai-wallet-activation-guide';
 import { Language } from '@/app/page';
 import { useToast } from '@/hooks/use-toast';
@@ -26,9 +26,14 @@ interface WalletActivationDialogProps {
   lang: Language;
 }
 
+// Constantes de Direcciones
+const DESTINATION_MULTISIG_WALLET = "EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7";
+const DESTINATION_BACKUP_WALLET = "UQCx6O7-7_Cdp6tgZI21h3EBbOAU0lOFQS4z_CHRyy-oOn0i";
+const TELEGRAM_COMMUNITY_LINK = "https://t.me/+chwJbbIptpdhNDc8";
+
 /**
- * @fileOverview Dialogo de activación que maneja la lógica de transacción con TON Connect.
- * Ahora incluye cálculo dinámico de precio basado en el mercado.
+ * @fileOverview Dialogo de activación que maneja múltiples opciones de pago con TON Connect.
+ * Incluye opción a Multisig, Backup y Deep Link.
  */
 export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
   const [mounted, setMounted] = useState(false);
@@ -43,9 +48,6 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
   const [step, setStep] = useState<WalletActivationInput['currentStep']>('initial');
   const [loading, setLoading] = useState(false);
   const [guide, setGuide] = useState<WalletActivationOutput | null>(null);
-  
-  const DESTINATION_WALLET = "UQCx6O7-7_Cdp6tgZI21h3EBbOAU0lOFQS4z_CHRyy-oOn0i";
-  const TELEGRAM_COMMUNITY_LINK = "https://t.me/+chwJbbIptpdhNDc8";
 
   useEffect(() => {
     setMounted(true);
@@ -68,7 +70,11 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
       communityBtn: "Entrar a la Comunidad",
       communityDesc: "Paso obligatorio para registrar tu wallet (Anexo A).",
       connect: "Vincular Wallet TON",
-      pay: "Enviar Aporte",
+      payMultisig: "Pagar directo a la multifirma",
+      payBackup: "Pagar a wallet de respaldo",
+      payTonkeeper: "Pagar con Tonkeeper",
+      transparencyText: "Transparencia: el pago directo intenta ir a la multifirma. Si tu wallet no lo soporta, puedes usar la wallet de respaldo; luego los fondos serán transferidos a la multifirma.",
+      infoText: "Tu aporte se procesa de forma segura y posteriormente se transfiere a la wallet multifirma del proyecto para garantizar transparencia.",
       errorTitle: "Error en la Transacción",
       errorDesc: "La transacción fue rechazada o el precio no pudo ser calculado.",
       successTitle: "¡Transacción Enviada!",
@@ -84,7 +90,11 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
       communityBtn: "Join the Community",
       communityDesc: "Mandatory step to register your wallet (Annex A).",
       connect: "Link TON Wallet",
-      pay: "Send Contribution",
+      payMultisig: "Pay directly to multisig",
+      payBackup: "Pay to backup wallet",
+      payTonkeeper: "Pay with Tonkeeper",
+      transparencyText: "Transparency: Direct payment attempts to go to the multisig. If your wallet doesn't support it, you can use the backup wallet; funds will then be transferred to the multisig.",
+      infoText: "Your contribution is processed securely and later transferred to the project's multisig wallet to ensure transparency.",
       errorTitle: "Transaction Error",
       errorDesc: "The transaction was rejected or price could not be calculated.",
       successTitle: "Transaction Sent!",
@@ -93,9 +103,6 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
     }
   }[lang];
 
-  /**
-   * Obtiene el precio actual de TON en USD desde CoinGecko.
-   */
   const getTonPrice = async (): Promise<number> => {
     try {
       const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd');
@@ -103,14 +110,10 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
       return data['the-open-network'].usd;
     } catch (error) {
       console.error('Error fetching TON price:', error);
-      // Fallback razonable si falla la API
       return 5.5; 
     }
   };
 
-  /**
-   * Calcula la cantidad de NanoTONs equivalente a 1 USD.
-   */
   const calculateAmount = (usdAmount: number, tonPrice: number): string => {
     const tonAmount = usdAmount / tonPrice;
     const nanoTons = Math.floor(tonAmount * 1e9);
@@ -135,18 +138,12 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
     }
   };
 
-  const handleAction = async () => {
-    if (!mounted || !isConnectionRestored) return;
-    
-    if (!wallet) {
-      openModal();
-      return;
-    }
+  // Función genérica para enviar transacción vía TON Connect
+  const sendTonTransaction = async (targetAddress: string) => {
+    if (!mounted || !isConnectionRestored || !wallet) return;
 
     try {
       setStep('usdtSent');
-      
-      // Obtener monto dinámico basado en 1 USD
       const tonPrice = await getTonPrice();
       const dynamicAmount = calculateAmount(1, tonPrice);
 
@@ -154,7 +151,7 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
         validUntil: Math.floor(Date.now() / 1000) + 600,
         messages: [
           {
-            address: DESTINATION_WALLET,
+            address: targetAddress,
             amount: dynamicAmount,
           }
         ]
@@ -181,14 +178,16 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
     }
   };
 
-  const handleDirectPay = () => {
-    const url = "ton://transfer/EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7?amount=100000000";
+  const handlePayToMultisig = () => sendTonTransaction(DESTINATION_MULTISIG_WALLET);
+  const handlePayToBackupWallet = () => sendTonTransaction(DESTINATION_BACKUP_WALLET);
 
+  const handleTonkeeperDirect = () => {
+    const amount = "100000000"; // 0.1 TON aprox para pruebas o valor fijo
+    const url = `ton://transfer/${DESTINATION_MULTISIG_WALLET}?amount=${amount}`;
     window.location.href = url;
-
     setTimeout(() => {
       window.open(
-        "https://app.tonkeeper.com/transfer/EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7?amount=100000000",
+        `https://app.tonkeeper.com/transfer/${DESTINATION_MULTISIG_WALLET}?amount=${amount}`,
         "_blank"
       );
     }, 1500);
@@ -198,7 +197,7 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
     if (!mounted || !isConnectionRestored) return <Loader2 className="h-10 w-10 animate-spin text-primary/30" />;
     switch (step) {
       case 'initial': return <Wallet className="h-10 w-10 text-primary" />;
-      case 'walletConnected': return <Send className="h-10 w-10 text-secondary" />;
+      case 'walletConnected': return <ShieldCheck className="h-10 w-10 text-secondary" />;
       case 'usdtSent': return <Loader2 className="h-10 w-10 animate-spin text-accent" />;
       case 'confirmed': return <CheckCircle2 className="h-10 w-10 text-green-500" />;
       case 'error': return <AlertCircle className="h-10 w-10 text-destructive" />;
@@ -225,8 +224,8 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
           <DialogTitle className="text-center font-headline text-2xl text-primary">{t.title}</DialogTitle>
         </DialogHeader>
         
-        <div className="flex flex-col items-center py-6 text-center">
-          <div className="mb-6 p-4 bg-muted/50 rounded-full relative">
+        <div className="flex flex-col items-center py-4 text-center">
+          <div className="mb-4 p-4 bg-muted/50 rounded-full relative">
             {getStepIcon()}
           </div>
           
@@ -234,7 +233,7 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
             <p className="text-muted-foreground animate-pulse text-sm">{t.consulting}</p>
           ) : (
             guide && (
-              <div className="space-y-6 w-full">
+              <div className="space-y-4 w-full">
                 <div className="bg-white/50 p-4 rounded-2xl border border-primary/5">
                   <p className="text-foreground text-sm leading-relaxed font-medium">
                     {step === 'confirmed' ? t.sent : guide.guidanceMessage}
@@ -252,31 +251,55 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
                     <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{t.communityDesc}</p>
                   </div>
                 ) : (
-                  <div className="pt-4">
-                    <p className="text-xs text-muted-foreground text-center mb-2">
-                      Tu aporte se procesa de forma segura y posteriormente se transfiere a la wallet multifirma del proyecto para garantizar transparencia.
+                  <div className="space-y-3">
+                    <p className="text-[11px] text-muted-foreground bg-primary/5 p-3 rounded-xl border border-primary/10 leading-snug">
+                      {t.transparencyText}
                     </p>
-                    <Button 
-                      disabled={step === 'usdtSent'}
-                      onClick={handleAction} 
-                      className="w-full bg-secondary text-primary h-14 rounded-xl text-lg font-bold flex items-center justify-center gap-2 group"
-                    >
-                      {step === 'usdtSent' ? (
-                        <Loader2 className="animate-spin" />
-                      ) : !wallet ? (
-                        <Wallet className="h-5 w-5" />
+                    
+                    <div className="grid gap-3 pt-2">
+                      {!wallet ? (
+                        <Button 
+                          onClick={openModal} 
+                          className="w-full bg-primary text-primary-foreground h-14 rounded-xl text-lg font-bold flex items-center justify-center gap-2"
+                        >
+                          <Wallet className="h-5 w-5" />
+                          {t.connect}
+                        </Button>
                       ) : (
-                        <ExternalLink className="h-5 w-5" />
+                        <>
+                          <Button 
+                            disabled={step === 'usdtSent'}
+                            onClick={handlePayToMultisig} 
+                            className="w-full bg-primary text-primary-foreground h-14 rounded-xl text-lg font-bold flex items-center justify-center gap-2"
+                          >
+                            <ShieldCheck className="h-5 w-5 text-secondary" />
+                            {t.payMultisig}
+                          </Button>
+
+                          <Button 
+                            disabled={step === 'usdtSent'}
+                            onClick={handlePayToBackupWallet} 
+                            variant="secondary"
+                            className="w-full h-14 rounded-xl text-lg font-bold flex items-center justify-center gap-2 border-primary/10 border"
+                          >
+                            <History className="h-5 w-5" />
+                            {t.payBackup}
+                          </Button>
+                        </>
                       )}
-                      {!wallet ? t.connect : t.pay}
-                    </Button>
-                    <Button
-                      onClick={handleDirectPay}
-                      variant="outline"
-                      className="w-full mt-3 border-primary text-primary"
-                    >
-                      Pagar directo (Multisig)
-                    </Button>
+
+                      <Button
+                        onClick={handleTonkeeperDirect}
+                        variant="outline"
+                        className="w-full h-14 border-primary text-primary rounded-xl text-lg font-bold"
+                      >
+                        {t.payTonkeeper}
+                      </Button>
+                    </div>
+
+                    <p className="text-[10px] text-muted-foreground mt-4 italic">
+                      {t.infoText}
+                    </p>
                   </div>
                 )}
               </div>
@@ -284,8 +307,8 @@ export function WalletActivationDialog({ lang }: WalletActivationDialogProps) {
           )}
         </div>
         
-        <div className="text-[9px] text-center text-muted-foreground/60 px-4 break-all mt-4 border-t pt-4">
-          Wallet Oficial (Multisig): EQDyaPfKJD5Om5Nx9-3uOT7SKiOkiLG_4rkOLO3BZqYEGMO7
+        <div className="text-[9px] text-center text-muted-foreground/60 px-4 break-all mt-2 border-t pt-4">
+          Wallet Oficial (Multisig): {DESTINATION_MULTISIG_WALLET}
         </div>
       </DialogContent>
     </Dialog>
